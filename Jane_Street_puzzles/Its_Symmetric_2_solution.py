@@ -15,7 +15,9 @@ def factors(n: int, memo: dict) -> List[List[int]]:
     return results
 
 
-def padded_factors_of_fixed_length(n: int, length: int, padding_nums: List[int]) -> List[List[int]]:
+def padded_factors_of_fixed_length(
+        n: int, length: int, padding_nums: List[int],
+) -> List[List[int]]:
     memo = dict()
     factor_list = [l for l in factors(n, memo) if len(l) <= length]
     output_list_of_lists = []
@@ -47,7 +49,13 @@ def permutations(l: List) -> List[List]:
     return perms
 
 
-def shade(arr: List[List[int]], helper_arr: List[List[int]], cur_row: int, cur_col: int, shade_combination: List[int]):
+def shade(
+    arr: List[List[int]],
+    helper_arr: List[List[int]],
+    cur_row: int,
+    cur_col: int,
+    shade_combination: List[int],
+) -> bool:
     up, right, down, left = shade_combination
     # Shade updwards
     for i in range(1, up + 1):
@@ -104,16 +112,72 @@ def shade(arr: List[List[int]], helper_arr: List[List[int]], cur_row: int, cur_c
     return True
 
 
+def rotate_by_90_cw(arr: List[List[int]]) -> List[List[int]]:
+    # Rotates a 2d array by 90 degrees
+    return [list(row) for row in zip(*arr[::-1])]
+
+
 def is_symmetric(arr: List[List[int]]) -> bool:
-    return True
+    rotated_arr = [row.copy() for row in arr]
+    for i in range(4):
+        #  Check if rotationally symmetric
+        if i > 0 and rotated_arr == arr:
+            return True
+        # Check if horizontally symmetric
+        if [row[::-1] for row in rotated_arr] == arr:
+            return True
+        # Check if vertically symmetric
+        if rotated_arr[::-1] == arr:
+            return True
+        # Rotate by 90 degrees
+        rotated_arr = rotate_by_90_cw(rotated_arr)
+    return False
+
+
+def clear_connected_component(arr: List[List[int]], i: int, j: int):
+    if i < 0 or i >= len(arr) or j < 0 or j >= len(arr[0]) or arr[i][j] == 0:
+        return
+    arr[i][j] = 0
+    clear_connected_component(arr, i+1, j)
+    clear_connected_component(arr, i, j+1)
+    clear_connected_component(arr, i-1, j)
+    clear_connected_component(arr, i, j-1)
 
 
 def is_connected(arr: List[List[int]]) -> bool:
+    arr_copy = [row.copy() for row in arr]
+    connected_components_found = 0
+    for i in range(len(arr_copy)):
+        for j in range(len(arr_copy[0])):
+            if arr_copy[i][j] != 0:
+                if connected_components_found >= 1:
+                    return False
+                connected_components_found += 1
+                clear_connected_component(arr_copy, i, j)
     return True
 
 
-def sum_of_squares_of_connected_areas(arr: List[List[int]]) -> int:
-    return 0
+def area_of_connected_unshaded_area(arr: List[List[int]], i: int, j: int) -> int:
+    if i < 0 or i >= len(arr) or j < 0 or j >= len(arr[0]) or arr[i][j] != 0:
+        return 0
+    arr[i][j] = 1
+    return (
+        1 +
+        area_of_connected_unshaded_area(arr, i+1, j) +
+        area_of_connected_unshaded_area(arr, i, j+1) +
+        area_of_connected_unshaded_area(arr, i-1, j) +
+        area_of_connected_unshaded_area(arr, i, j-1)
+    )
+
+
+def sum_of_squares_of_connected_unshaded_areas(arr: List[List[int]]) -> int:
+    arr_copy = [row.copy() for row in arr]
+    total_sum = 0
+    for i in range(len(arr_copy)):
+        for j in range(len(arr_copy[0])):
+            if arr_copy[i][j] == 0:
+                total_sum += area_of_connected_unshaded_area(arr_copy, i, j)**2
+    return total_sum
 
 
 def next_position(cur_row: int, cur_col: int, end_col: int) -> Tuple[int, int]:
@@ -132,6 +196,8 @@ def solve_rec(
     cur_col: int,
     end_row: int,
     end_col: int,
+    array_states_checked: set,
+    recursion_depth: int = -1,
 ):
     while cur_row <= end_row:
         val = arr[cur_row][cur_col]
@@ -146,24 +212,29 @@ def solve_rec(
                 arr_before_shading = [row.copy() for row in arr]
                 helper_arr_before_shading = [row.copy() for row in helper_arr]
                 success = shade(arr, helper_arr, cur_row, cur_col, shade_combination)
-                if success:
+                arr_as_string = ', '.join([', '.join([str(x) for x in row]) for row in arr])
+                if success and not arr_as_string in array_states_checked:
                     new_row, new_col = next_position(cur_row, cur_col, end_col)
-                    solve_rec(arr, helper_arr, new_row, new_col, end_row, end_col)
+                    solve_rec(arr, helper_arr, new_row, new_col, end_row, end_col, array_states_checked, recursion_depth + 1)
+                array_states_checked.add(arr_as_string)
                 arr = arr_before_shading
                 helper_arr = helper_arr_before_shading
             return
         cur_row, cur_col = next_position(cur_row, cur_col, end_col)
-    print('Possible solution, checking')
-    if is_symmetric(arr) and is_connected(arr):
+        # if recursion_depth in range(1, 11):
+        #     print(f'{recursion_depth}: Checked row={cur_row}, col={cur_col}')
+    shading_arr = [[int(x != 0) for x in row] for row in arr]
+    if is_symmetric(shading_arr) and is_connected(shading_arr):
         print("Solution found:\n", np.array(arr))
         print("Sum of squares of areas of connected regions:",
-            sum_of_squares_of_connected_areas(arr))
+              sum_of_squares_of_connected_unshaded_areas(arr))
 
 
 def solve(arr: List[List[int]]):
     num_rows, num_cols = len(arr), len(arr[0])
     helper_arr = [[0 for __ in range(num_cols)] for __ in range(num_rows)]
-    solve_rec(arr, helper_arr, 0, 0, num_rows-1, num_cols-1)
+    array_states_checked = set()
+    solve_rec(arr, helper_arr, 0, 0, num_rows-1, num_cols-1, array_states_checked, recursion_depth=1)
 
 
 arr = [[0, 0, 8, 0, 0],
@@ -172,6 +243,30 @@ arr = [[0, 0, 8, 0, 0],
        [3, 0, 0, 0, 0],
        [0, 0, 2, 0, 0]]
 
-expected_result = 37
+# example_result = 37
+
+arr = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 27, 0],
+    [0, 0, 24, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0],
+    [3, 0, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28],
+    [0, 3, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 8, 0, 0, 0, 5, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 2, 0],
+    [24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 2],
+    [0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 70, 0, 0],
+    [0, 8, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+]
+
+
+def display_arr(arr: List[List[int]]):
+    for row in [['__' if x == 0 else str(x) if x >= 10 else ' ' + str(x) for x in row] for row in arr]:
+        print(', '.join(row))
+
+
+display_arr(arr)
 
 solve(arr)
