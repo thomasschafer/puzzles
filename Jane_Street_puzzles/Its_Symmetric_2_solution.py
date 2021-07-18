@@ -1,12 +1,21 @@
-from typing import List, Tuple
+'''
+My solution for the  "It's Symmetric 2" puzzle, from the puzzles section of the Jane Street site.
+See https://www.janestreet.com/puzzles/archive/
+'''
+
+from datetime import datetime
+import math
 import numpy as np
+import time
+from typing import List, Tuple
+from io import TextIOWrapper
 
 
 def factors(n: int, memo: dict) -> List[List[int]]:
     if n in memo:
         return memo[n]
     results = [[n]]
-    for i in range(2, int(n**(1/2)+1)):
+    for i in range(2, math.ceil(n/2)+1):
         if n % i == 0:
             for l in factors(int(n / i), memo):
                 if i <= min(l):
@@ -197,6 +206,7 @@ def solve_rec(
     end_row: int,
     end_col: int,
     array_states_checked: set,
+    solutions_file: TextIOWrapper,
     recursion_depth: int = -1,
 ):
     while cur_row <= end_row:
@@ -215,58 +225,86 @@ def solve_rec(
                 arr_as_string = ', '.join([', '.join([str(x) for x in row]) for row in arr])
                 if success and not arr_as_string in array_states_checked:
                     new_row, new_col = next_position(cur_row, cur_col, end_col)
-                    solve_rec(arr, helper_arr, new_row, new_col, end_row, end_col, array_states_checked, recursion_depth + 1)
+                    solve_rec(
+                          arr, helper_arr, new_row, new_col, end_row, end_col, array_states_checked,
+                        solutions_file, recursion_depth + 1,
+                    )
                 array_states_checked.add(arr_as_string)
                 arr = arr_before_shading
                 helper_arr = helper_arr_before_shading
             return
         cur_row, cur_col = next_position(cur_row, cur_col, end_col)
-        # if recursion_depth in range(1, 11):
-        #     print(f'{recursion_depth}: Checked row={cur_row}, col={cur_col}')
+        if recursion_depth in range(1, 20):
+            print(f'{recursion_depth}: Checked row={cur_row}, col={cur_col}')
     shading_arr = [[int(x != 0) for x in row] for row in arr]
     if is_symmetric(shading_arr) and is_connected(shading_arr):
         print("Solution found:\n", np.array(arr))
-        print("Sum of squares of areas of connected regions:",
-              sum_of_squares_of_connected_unshaded_areas(arr))
+        res = sum_of_squares_of_connected_unshaded_areas(arr)
+        print("Sum of squares of areas of connected regions:", res)
+        solutions_file.write(str(np.array(arr)) + '\n')
+        solutions_file.write(str(res) + '\n\n')
 
 
 def solve(arr: List[List[int]]):
+    start_time = time.time()
+    cur_datetime = str(datetime.now())[:-7].replace(" ", "_").replace(":", "_")
+    solutions_file = open(f'logs/solutions_file_{cur_datetime}.txt', 'a')
     num_rows, num_cols = len(arr), len(arr[0])
     helper_arr = [[0 for __ in range(num_cols)] for __ in range(num_rows)]
     array_states_checked = set()
-    solve_rec(arr, helper_arr, 0, 0, num_rows-1, num_cols-1, array_states_checked, recursion_depth=1)
+    solve_rec(arr, helper_arr, 0, 0, num_rows-1, num_cols-1, array_states_checked, solutions_file, recursion_depth=1)
+    time_taken_str = str(round(time.time() - start_time, 3)) + ' seconds'
+    print('Time taken: ', time_taken_str)
+    solutions_file.write(time_taken_str + '\n')
+    solutions_file.close()
 
 
-arr = [[0, 0, 8, 0, 0],
-       [0, 0, 0, 0, 2],
-       [0, 0, 4, 0, 0],
-       [3, 0, 0, 0, 0],
-       [0, 0, 2, 0, 0]]
+# # arr = [[0, 0, 8, 0, 0],
+# #        [0, 0, 0, 0, 2],
+# #        [0, 0, 4, 0, 0],
+# #        [3, 0, 0, 0, 0],
+# #        [0, 0, 2, 0, 0]]
 
-# example_result = 37
+# # example_result = 37
 
-arr = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 27, 0],
-    [0, 0, 24, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0],
-    [3, 0, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28],
-    [0, 3, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 8, 0, 0, 0, 5, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 2, 0],
-    [24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 2],
-    [0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 70, 0, 0],
-    [0, 8, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-]
+# arr = [
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 7, 0],
+#     # [0, 0, 4, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0],
+#     # [3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0],
+#     # [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8],
+#     # [0, 3, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
+#     # [0, 0, 0, 0, 8, 0, 0, 0, 5, 0, 0, 0, 0],
+#     # [0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 2, 0],
+#     # [24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     # [0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 2],
+#     # [0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 70, 0, 0],
+#     # [0, 8, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
+#     # [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+# ]
+
+# # arr = [
+# #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+# #     [0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 27, 0],
+# #     [0, 0, 24, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0],
+# #     [3, 0, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0],
+# #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28],
+# #     [0, 3, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
+# #     [0, 0, 0, 0, 8, 0, 0, 0, 5, 0, 0, 0, 0],
+# #     [0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 2, 0],
+# #     [24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+# #     [0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 2],
+# #     [0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 70, 0, 0],
+# #     [0, 8, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
+# #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+# # ]
 
 
-def display_arr(arr: List[List[int]]):
-    for row in [['__' if x == 0 else str(x) if x >= 10 else ' ' + str(x) for x in row] for row in arr]:
-        print(', '.join(row))
+# def display_arr(arr: List[List[int]]):
+#     for row in [['__' if x == 0 else str(x) if x >= 10 else ' ' + str(x) for x in row] for row in arr]:
+#         print(', '.join(row))
 
 
-display_arr(arr)
+# display_arr(arr)
 
-solve(arr)
+# solve(arr)
