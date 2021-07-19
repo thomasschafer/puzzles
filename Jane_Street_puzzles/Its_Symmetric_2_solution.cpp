@@ -1,3 +1,4 @@
+#include <array>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -5,8 +6,9 @@
 #include <set>
 #include <vector>
 
-using std::vector;
 using std::map;
+using std::vector;
+using std::set;
 
 
 vector<vector<int>> factors(int n, map<int, vector<vector<int>>> memo) {
@@ -65,9 +67,25 @@ vector<vector<int>> padded_factors_of_fixed_length(int n, int length, vector<int
 }
 
 
-vector<vector<int>> permutations(vector<int>) {
-    vector<vector<int>> res;
-    return res;
+set<vector<int>> permutations(vector<int> l) {
+    set<vector<int>> perms;
+    if (l.size() <= 1) {
+        perms.insert(l);
+        return perms;
+    }
+    vector<int> l_subvector(l.begin() + 1, l.end());
+    for (auto short_perm : permutations(l_subvector)) {
+        for (int split_index = 0; split_index <= short_perm.size(); split_index++) {
+            vector<int> full_perm;
+            full_perm.insert(
+                full_perm.end(), short_perm.begin(), short_perm.begin() + split_index);
+            full_perm.push_back(l[0]);
+            full_perm.insert(
+                full_perm.end(), short_perm.begin() + split_index, short_perm.end());
+            perms.insert(full_perm);
+        }
+    }
+    return perms;
 }
 
 bool shade(
@@ -77,40 +95,54 @@ bool shade(
     int cur_col,
     vector<int> shade_combination
 ) {
+    // TODO
     return true;
 }
 
 
 vector<vector<int>> rotate_by_90_cw(vector<vector<int>> arr) {
-    return arr;
+    vector<vector<int>> arr_rotated;
+    for (int i = 0; i <= arr[0].size()-1; i++) {
+        vector<int> row;
+        for (int j = arr.size()-1; j >= 0; j--) {
+            row.push_back(arr[j][i]);
+        }
+        arr_rotated.push_back(row);
+    }
+    return arr_rotated;
 }
 
 bool is_symmetric(vector<vector<int>> arr) {
+    // TODO
     return true;
 }
 
 
 void clear_connected_component(vector<vector<int>> arr, int i, int j) {
-
+    // TODO
 }
 
 bool is_connected(vector<vector<int>> arr) {
+    // TODO
     return true;
 }
 
 
 int area_of_connected_unshaded_area(vector<vector<int>> arr, int i, int j) {
+    // TODO
     return 0;
 }
 
 
 int sum_of_squares_of_connected_unshaded_areas(vector<vector<int>> arr) {
+    // TODO
     return 0;
 }
 
 
-int* next_position(int cur_row, int cur_col, int end_col) {
-    int new_position[2];
+std::array<int, 2> next_position(int cur_row, int cur_col, int end_col) {
+    std::array<int, 2> new_position;
+    // TODO
     return new_position;
 }
 
@@ -122,20 +154,21 @@ void solve_rec(
     int cur_col,
     int end_row,
     int end_col,
-    std::set<std::string> array_states_checked,
+    set<std::string> array_states_checked,
     std::fstream solutions_file,
     int recursion_depth
 ) {
-
+    // TODO
 }
 
 
 void solve(vector<vector<int>> arr) {
-
+    // TODO
 }
 
 
 int main() {
+
     return 0;
 }
 
