@@ -90,17 +90,104 @@ set<vector<int>> permutations(vector<int> l) {
 
 bool shade(
     vector<vector<int>> arr,
-    vector<vector<int>>  helper_arr,
+    vector<vector<int>> helper_arr,
     int cur_row,
     int cur_col,
     vector<int> shade_combination
 ) {
-    // TODO
+    int up = shade_combination[0];
+    int right = shade_combination[1];
+    int down = shade_combination[2];
+    int left = shade_combination[3];
+    // Shade updwards
+    for (int i = 0; i <= up; i++) {
+        if (cur_row - i < 0 && up > 1) {
+            return false;
+        }
+        if (cur_row - i >= 0) {
+            if (helper_arr[cur_row - i][cur_col] > 0) {
+                return false;
+            }
+            if (arr[cur_row - i][cur_col] < 1) {
+                arr[cur_row - i][cur_col] = 1;
+            }
+        }
+    }
+    int i = up + 1;
+    if (cur_row - i >= 0) {
+        if (arr[cur_row - i][cur_col] > 0) {
+            return false;
+        }
+        helper_arr[cur_row - i][cur_col] = 1;
+    }
+    // Shade rightwards
+    for (int i = 0; i <= right + 1; i++) {
+        if (cur_col + i >= arr[0].size() and right > 1) {
+            return false;
+        }
+        if (cur_col + i < arr[0].size()) {
+            if (helper_arr[cur_row][cur_col + i] > 0) {
+                return false;
+            }
+            if (arr[cur_row][cur_col + i] < 1) {
+                arr[cur_row][cur_col + i] = 1;
+            }
+        }
+    }
+    i = right + 1;
+    if (cur_col + i < arr[0].size()) {
+        if (arr[cur_row][cur_col + i] > 0) {
+            return false;
+        }
+        helper_arr[cur_row][cur_col + i] = 1;
+    }
+    // Shade downwards
+    for (int i = 0; i <= down + 1; i++) {
+        if ((cur_row + i >= arr.size()) and down > 1) {
+            return false;
+        }
+        if (cur_row + i < arr.size()) {
+            if (helper_arr[cur_row + i][cur_col] > 0) {
+                return false;
+            }
+            if (arr[cur_row + i][cur_col] < 1) {
+                arr[cur_row + i][cur_col] = 1;
+            }
+        }
+    }
+    i = down + 1;
+    if (cur_row + i < arr.size()) {
+        if (arr[cur_row + i][cur_col] > 0) {
+            return false;
+        }
+        helper_arr[cur_row + i][cur_col] = 1;
+    }
+    // Shade leftwards
+    for (int i = 0; i <= left + 1; i++) {
+        if (cur_col - i < 0 && left > 1) {
+            return false;
+        }
+        if (cur_col - i >= 0) {
+            if (helper_arr[cur_row][cur_col - i] > 0) {
+                return false;
+            }
+            if (arr[cur_row][cur_col - i] < 1) {
+                arr[cur_row][cur_col - i] = 1;
+            }
+        }
+    }
+    i = left + 1;
+    if (cur_col - i >= 0) {
+        if (arr[cur_row][cur_col - i] > 0) {
+            return false;
+        }
+        helper_arr[cur_row][cur_col - i] = 1;
+    }
     return true;
 }
 
 
-vector<vector<int>> rotate_by_90_cw(vector<vector<int>> arr) {
+vector<vector<int>> rotate_by_90_cw(const vector<vector<int>> &arr) {
     vector<vector<int>> arr_rotated;
     for (int i = 0; i <= arr[0].size()-1; i++) {
         vector<int> row;
@@ -112,9 +199,40 @@ vector<vector<int>> rotate_by_90_cw(vector<vector<int>> arr) {
     return arr_rotated;
 }
 
-bool is_symmetric(vector<vector<int>> arr) {
-    // TODO
-    return true;
+
+vector<vector<int>> flip_vertically(const vector<vector<int>> &arr) {
+    vector<vector<int>> arr_flipped;
+    for (auto row : arr) {
+        arr_flipped.insert(arr_flipped.begin(), row);
+    }
+    return arr_flipped;
+}
+
+
+vector<vector<int>> flip_horizontally(const vector<vector<int>> &arr) {
+    vector<vector<int>> arr_flipped;
+    for (auto row : arr) {
+        vector<int> row_flipped;
+        for (auto x : row) {
+            row_flipped.insert(row_flipped.begin(), x);
+        }
+        arr_flipped.push_back(row_flipped);
+    }
+    return arr_flipped;
+}
+
+
+bool is_symmetric(const vector<vector<int>> &arr) {
+    vector<vector<int>> rotated_arr = arr;
+    for (int i = 0; i <= 3; i++) {
+        if (
+            (i > 0 && rotated_arr == arr) ||
+            (flip_horizontally(rotated_arr) == arr) ||
+            (flip_vertically(rotated_arr) == arr)
+        ) return true;
+        rotated_arr = rotate_by_90_cw(arr);
+    }
+    return false;
 }
 
 
@@ -166,9 +284,18 @@ void solve(vector<vector<int>> arr) {
     // TODO
 }
 
+void print_2d_vector(vector<vector<int>> const &arr) {
+    for (auto row  : arr) {
+        for (auto x : row) {
+            std::cout << x << ", ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
 
 int main() {
-
     return 0;
 }
 
