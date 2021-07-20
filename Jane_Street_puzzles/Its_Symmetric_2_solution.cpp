@@ -4,14 +4,24 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <tuple>
 #include <vector>
 
-using std::map;
 using std::vector;
-using std::set;
 
 
-vector<vector<int>> factors(int n, map<int, vector<vector<int>>> memo) {
+void print_2d_vector(const vector<vector<int>> &arr) {
+    for (auto row  : arr) {
+        for (auto x : row) {
+            std::cout << x << ", ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+
+vector<vector<int>> factors(int n, std::map<int, vector<vector<int>>> &memo) {
     if (memo.count(n) > 0) {
         return memo[n];
     }
@@ -31,12 +41,14 @@ vector<vector<int>> factors(int n, map<int, vector<vector<int>>> memo) {
 }
 
 vector<vector<int>> factors(int n) {
-    map<int, vector<vector<int>>> memo;
+    std::map<int, vector<vector<int>>> memo;
     return factors(n, memo);
 }
 
 
-vector<vector<int>> padded_factors_of_fixed_length(int n, int length, vector<int> padding_nums) {
+vector<vector<int>> padded_factors_of_fixed_length(
+    int n, int length, const vector<int> &padding_nums
+) {
     vector<vector<int>> factor_list;
     for (auto l : factors(n)) {
         if (l.size() <= length) {
@@ -67,8 +79,8 @@ vector<vector<int>> padded_factors_of_fixed_length(int n, int length, vector<int
 }
 
 
-set<vector<int>> permutations(vector<int> l) {
-    set<vector<int>> perms;
+std::set<vector<int>> permutations(const vector<int> &l) {
+    std::set<vector<int>> perms;
     if (l.size() <= 1) {
         perms.insert(l);
         return perms;
@@ -89,11 +101,11 @@ set<vector<int>> permutations(vector<int> l) {
 }
 
 bool shade(
-    vector<vector<int>> arr,
-    vector<vector<int>> helper_arr,
+    vector<vector<int>> &arr,
+    vector<vector<int>> &helper_arr,
     int cur_row,
     int cur_col,
-    vector<int> shade_combination
+    const vector<int> &shade_combination
 ) {
     int up = shade_combination[0];
     int right = shade_combination[1];
@@ -236,43 +248,84 @@ bool is_symmetric(const vector<vector<int>> &arr) {
 }
 
 
-void clear_connected_component(vector<vector<int>> arr, int i, int j) {
-    // TODO
+void clear_connected_component(vector<vector<int>> &arr, int i, int j) {
+    if (i < 0 || i >= arr.size() || j < 0 || j >= arr[0].size() || arr[i][j] == 0) {
+        return;
+    }
+    arr[i][j] = 0;
+    clear_connected_component(arr, i+1, j);
+    clear_connected_component(arr, i, j+1);
+    clear_connected_component(arr, i-1, j);
+    clear_connected_component(arr, i, j-1);
 }
 
-bool is_connected(vector<vector<int>> arr) {
-    // TODO
+
+bool is_connected(const vector<vector<int>> &arr) {
+    vector<vector<int>> arr_copy = arr;
+    int connected_components_found = 0;
+    for (int i = 0; i <= arr_copy.size()-1; i++) {
+        for (int j = 0; j <= arr_copy[0].size()-1; j++) {
+            if (arr_copy[i][j] != 0) {
+                if (connected_components_found >= 1) {
+                    return false;
+                }
+                connected_components_found++;
+                clear_connected_component(arr_copy, i, j);
+            }
+        }
+    }
     return true;
 }
 
 
-int area_of_connected_unshaded_area(vector<vector<int>> arr, int i, int j) {
-    // TODO
-    return 0;
+int area_of_connected_unshaded_area(vector<vector<int>> &arr, int i, int j) {
+    if (i < 0 || i >= arr.size() || j < 0 || j >= arr[0].size() || arr[i][j] != 0) {
+        return 0;
+    }
+    arr[i][j] = 1;
+    return (
+        1 +
+        area_of_connected_unshaded_area(arr, i+1, j) +
+        area_of_connected_unshaded_area(arr, i, j+1) +
+        area_of_connected_unshaded_area(arr, i-1, j) +
+        area_of_connected_unshaded_area(arr, i, j-1)
+    );
 }
 
 
-int sum_of_squares_of_connected_unshaded_areas(vector<vector<int>> arr) {
-    // TODO
-    return 0;
+int sum_of_squares_of_connected_unshaded_areas(const vector<vector<int>> &arr) {
+    vector<vector<int>> arr_copy = arr;
+    int total_sum = 0;
+    for (int i = 0; i <= arr_copy.size()-1; i++) {
+        for (int j = 0; j <= arr_copy[0].size()-1; j++) {
+            if (arr_copy[i][j] == 0) {
+                total_sum += std::pow(area_of_connected_unshaded_area(arr_copy, i, j), 2);
+            }
+        }
+    }
+    return total_sum;
 }
 
 
-std::array<int, 2> next_position(int cur_row, int cur_col, int end_col) {
-    std::array<int, 2> new_position;
-    // TODO
-    return new_position;
+std::tuple<int, int> next_position(int cur_row, int cur_col, int end_col) {
+    if (cur_col == end_col) {
+        cur_row += 1;
+        cur_col = 0;
+    } else {
+        cur_col += 1;
+    }
+    return {cur_row, cur_col};
 }
 
 
 void solve_rec(
-    vector<vector<int>> arr,
-    vector<vector<int>> helper_arr,
+    vector<vector<int>> &arr,
+    vector<vector<int>> &helper_arr,
     int cur_row,
     int cur_col,
     int end_row,
     int end_col,
-    set<std::string> array_states_checked,
+    std::set<std::string> &array_states_checked,
     std::fstream solutions_file,
     int recursion_depth
 ) {
@@ -284,18 +337,17 @@ void solve(vector<vector<int>> arr) {
     // TODO
 }
 
-void print_2d_vector(vector<vector<int>> const &arr) {
-    for (auto row  : arr) {
-        for (auto x : row) {
-            std::cout << x << ", ";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
-}
-
 
 int main() {
+    vector<vector<int>> arr = {
+        {1, 1, 8, 1, 1},
+        {1, 0, 1, 1, 2},
+        {1, 1, 4, 0, 1},
+        {3, 1, 0, 0, 0},
+        {1, 1, 2, 0, 0}
+    };
+    print_2d_vector(arr);
+    std::cout << sum_of_squares_of_connected_unshaded_areas(arr) << std::endl;
     return 0;
 }
 
