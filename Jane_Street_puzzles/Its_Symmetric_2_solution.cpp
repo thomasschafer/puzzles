@@ -1,9 +1,12 @@
 #include <array>
+#include <chrono>
+#include <ctime>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -318,6 +321,16 @@ std::tuple<int, int> next_position(int cur_row, int cur_col, int end_col) {
 }
 
 
+std::string get_logging_filename() {
+    std::time_t t = std::time(NULL);
+    char cur_datetime[100];
+    std::strftime(cur_datetime, 100, "%Y-%m-%d-%T", std::localtime(&t));
+    std::string cur_datetime_str = cur_datetime;
+    std::string filename = "logs/solutions_file_cpp_" + cur_datetime_str + ".txt";
+    return filename;
+}
+
+
 void solve_rec(
     vector<vector<int>> &arr,
     vector<vector<int>> &helper_arr,
@@ -326,7 +339,7 @@ void solve_rec(
     int end_row,
     int end_col,
     std::set<std::string> &array_states_checked,
-    std::fstream solutions_file,
+    std::ofstream &solutions_file,
     int recursion_depth
 ) {
     // TODO
@@ -334,7 +347,27 @@ void solve_rec(
 
 
 void solve(vector<vector<int>> arr) {
-    // TODO
+    auto start_time = std::chrono::system_clock::now();
+    std::ofstream solutions_file (get_logging_filename());
+    int num_rows = arr.size();
+    int num_cols = arr[0].size();
+    vector<vector<int>> helper_arr;
+    for (int i = 0; i <= num_rows; i++) {
+        vector<int> row = {};
+        for (int j = 0; j <= num_cols; j++) {
+            row.push_back(0);
+        }
+        helper_arr.push_back(row);
+    }
+    std::set<std::string> arr_states_checked;
+    solve_rec(
+        arr, helper_arr, 0, 0, num_rows-1, num_cols-1, arr_states_checked, solutions_file, 1
+    );
+    auto end_time = std::chrono::system_clock::now();
+    double elapsed_seconds = (end_time - start_time).count()/std::pow(10, 6);
+    std::cout << "Time taken: " << elapsed_seconds << "s" << std::endl;
+    solutions_file << "Time taken: " << elapsed_seconds << "s" << std::endl;
+    solutions_file.close();
 }
 
 
@@ -348,6 +381,6 @@ int main() {
     };
     print_2d_vector(arr);
     std::cout << sum_of_squares_of_connected_unshaded_areas(arr) << std::endl;
+    solve(arr);
     return 0;
 }
-

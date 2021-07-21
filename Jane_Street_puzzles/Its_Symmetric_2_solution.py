@@ -226,7 +226,7 @@ def solve_rec(
                 if success and not arr_as_string in array_states_checked:
                     new_row, new_col = next_position(cur_row, cur_col, end_col)
                     solve_rec(
-                          arr, helper_arr, new_row, new_col, end_row, end_col, array_states_checked,
+                        arr, helper_arr, new_row, new_col, end_row, end_col, array_states_checked,
                         solutions_file, recursion_depth + 1,
                     )
                 array_states_checked.add(arr_as_string)
@@ -252,7 +252,8 @@ def solve(arr: List[List[int]]):
     num_rows, num_cols = len(arr), len(arr[0])
     helper_arr = [[0 for __ in range(num_cols)] for __ in range(num_rows)]
     array_states_checked = set()
-    solve_rec(arr, helper_arr, 0, 0, num_rows-1, num_cols-1, array_states_checked, solutions_file, recursion_depth=1)
+    solve_rec(
+        arr, helper_arr, 0, 0, num_rows-1, num_cols-1, array_states_checked, solutions_file, 1)
     time_taken_str = str(round(time.time() - start_time, 3)) + ' seconds'
     print('Time taken: ', time_taken_str)
     solutions_file.write(time_taken_str + '\n')
