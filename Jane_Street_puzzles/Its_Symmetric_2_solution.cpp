@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 
 using std::vector;
@@ -346,6 +347,14 @@ std::string arr_to_string(const vector<vector<int>> &arr) {
     return res;
 }
 
+std::string vector_to_string(const vector<int> &vec) {
+    std::string res = "";
+    for (auto val : vec) {
+        res += std::to_string(val) + ", ";
+    }
+    return res;
+}
+
 
 void solve_rec(
     vector<vector<int>> &arr,
@@ -354,7 +363,7 @@ void solve_rec(
     int cur_col,
     int end_row,
     int end_col,
-    std::set<std::string> &array_states_checked,
+    std::unordered_set<std::string> &array_states_checked,
     std::ofstream &solutions_file,
     int recursion_depth
 ) {
@@ -374,14 +383,16 @@ void solve_rec(
                 vector<vector<int>> helper_arr_before_shading = helper_arr;
                 bool success = shade(arr, helper_arr, cur_row, cur_col, shade_combination);
                 std::string arr_as_string = arr_to_string(arr);
-                if (success && (array_states_checked.count(arr_as_string) == 0)) {
+                if (success &&
+                    (array_states_checked.find(arr_as_string) == array_states_checked.end())
+                ) {
+                    array_states_checked.insert(arr_as_string);
                     auto [new_row, new_col] = next_position(cur_row, cur_col, end_col);
                     solve_rec(
                         arr, helper_arr, new_row, new_col, end_row, end_col, array_states_checked,
                         solutions_file, recursion_depth + 1
                     );
                 }
-                array_states_checked.insert(arr_as_string);
                 arr = arr_before_shading;
                 helper_arr = helper_arr_before_shading;
             }
@@ -427,7 +438,7 @@ void solve(vector<vector<int>> arr) {
         }
         helper_arr.push_back(row);
     }
-    std::set<std::string> arr_states_checked;
+    std::unordered_set<std::string> arr_states_checked;
     solve_rec(
         arr, helper_arr, 0, 0, num_rows-1, num_cols-1, arr_states_checked, solutions_file, 1
     );
@@ -440,14 +451,31 @@ void solve(vector<vector<int>> arr) {
 
 
 int main() {
+    // vector<vector<int>> arr = {
+    //     {0, 0, 8, 0, 0},
+    //     {0, 0, 0, 0, 2},
+    //     {0, 0, 4, 0, 0},
+    //     {3, 0, 0, 0, 0},
+    //     {0, 0, 2, 0, 0}
+    // };
+
     vector<vector<int>> arr = {
-        {0, 0, 8, 0, 0},
-        {0, 0, 0, 0, 2},
-        {0, 0, 4, 0, 0},
-        {3, 0, 0, 0, 0},
-        {0, 0, 2, 0, 0}
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 27, 0},
+        {0, 0, 24, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0},
+        {3, 0, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28},
+        {0, 3, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 8, 0, 0, 0, 5, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 2, 0},
+        {24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 2},
+        {0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 70, 0, 0},
+        {0, 8, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     };
-        print_2d_vector(arr);
-        solve(arr);
+
+    print_2d_vector(arr);
+    solve(arr);
     return 0;
 }
