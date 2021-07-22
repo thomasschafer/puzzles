@@ -136,7 +136,7 @@ bool shade(
         helper_arr[cur_row - i][cur_col] = 1;
     }
     // Shade rightwards
-    for (int i = 0; i <= right + 1; i++) {
+    for (int i = 0; i <= right; i++) {
         if (cur_col + i >= arr[0].size() and right > 1) {
             return false;
         }
@@ -157,7 +157,7 @@ bool shade(
         helper_arr[cur_row][cur_col + i] = 1;
     }
     // Shade downwards
-    for (int i = 0; i <= down + 1; i++) {
+    for (int i = 0; i <= down; i++) {
         if ((cur_row + i >= arr.size()) and down > 1) {
             return false;
         }
@@ -178,7 +178,7 @@ bool shade(
         helper_arr[cur_row + i][cur_col] = 1;
     }
     // Shade leftwards
-    for (int i = 0; i <= left + 1; i++) {
+    for (int i = 0; i <= left; i++) {
         if (cur_col - i < 0 && left > 1) {
             return false;
         }
@@ -325,9 +325,25 @@ std::string get_logging_filename() {
     std::time_t t = std::time(NULL);
     char cur_datetime[100];
     std::strftime(cur_datetime, 100, "%Y-%m-%d-%T", std::localtime(&t));
+    for (int i = 0; i <= sizeof(cur_datetime)/sizeof(cur_datetime[0]); i++) {
+        if (cur_datetime[i] == ':') {
+            cur_datetime[i] = '_';
+        }
+    }
     std::string cur_datetime_str = cur_datetime;
     std::string filename = "logs/solutions_file_cpp_" + cur_datetime_str + ".txt";
     return filename;
+}
+
+std::string arr_to_string(const vector<vector<int>> &arr) {
+    std::string res = "";
+    for (auto row : arr) {
+        for (auto val : row) {
+            res += std::to_string(val) + ", ";
+        }
+        res += " / ";
+    }
+    return res;
 }
 
 
@@ -342,7 +358,59 @@ void solve_rec(
     std::ofstream &solutions_file,
     int recursion_depth
 ) {
-    // TODO
+    while (cur_row <= end_row) {
+        int val = arr[cur_row][cur_col];
+        // Assuming that all values are >= 2, which is of course not a good general assumption
+        // but works for the test cases given. TODO: fix
+        if (val >= 2) {
+            std::set<vector<int>> shade_combinations;
+            for (auto factors : padded_factors_of_fixed_length(val, 4, {0, 1})) {
+                for (auto perm : permutations(factors)) {
+                    shade_combinations.insert(perm);
+                }
+            }
+            for (auto shade_combination : shade_combinations) {
+                vector<vector<int>> arr_before_shading = arr;
+                vector<vector<int>> helper_arr_before_shading = helper_arr;
+                bool success = shade(arr, helper_arr, cur_row, cur_col, shade_combination);
+                std::string arr_as_string = arr_to_string(arr);
+                if (success && (array_states_checked.count(arr_as_string) == 0)) {
+                    auto [new_row, new_col] = next_position(cur_row, cur_col, end_col);
+                    solve_rec(
+                        arr, helper_arr, new_row, new_col, end_row, end_col, array_states_checked,
+                        solutions_file, recursion_depth + 1
+                    );
+                }
+                array_states_checked.insert(arr_as_string);
+                arr = arr_before_shading;
+                helper_arr = helper_arr_before_shading;
+            }
+            return;
+        }
+        auto new_positions = next_position(cur_row, cur_col, end_col);
+        cur_row = std::get<0>(new_positions);
+        cur_col = std::get<1>(new_positions);
+        if (recursion_depth <= 20) {
+            std::cout << recursion_depth << ": Checked row=" << cur_row << ", col=" << cur_col <<
+                std::endl;
+        }
+    }
+    vector<vector<int>> shading_arr;
+    for (auto row : arr) {
+        vector<int> shading_row;
+        for (auto val : row) {
+            shading_row.push_back(val != 0);
+        }
+        shading_arr.push_back(shading_row);
+    }
+    if (is_symmetric(shading_arr) && is_connected(shading_arr)) {
+        std::cout << "Solution found:" << std::endl;
+        print_2d_vector(arr);
+        int res = sum_of_squares_of_connected_unshaded_areas(arr);
+        std::cout << "Sum of squares of areas of connected regions: " << res << std::endl;
+        solutions_file << arr_to_string(arr) << std::endl;
+        solutions_file << res << std::endl << std::endl;
+    }
 }
 
 
@@ -353,7 +421,7 @@ void solve(vector<vector<int>> arr) {
     int num_cols = arr[0].size();
     vector<vector<int>> helper_arr;
     for (int i = 0; i <= num_rows; i++) {
-        vector<int> row = {};
+        vector<int> row;
         for (int j = 0; j <= num_cols; j++) {
             row.push_back(0);
         }
@@ -373,14 +441,13 @@ void solve(vector<vector<int>> arr) {
 
 int main() {
     vector<vector<int>> arr = {
-        {1, 1, 8, 1, 1},
-        {1, 0, 1, 1, 2},
-        {1, 1, 4, 0, 1},
-        {3, 1, 0, 0, 0},
-        {1, 1, 2, 0, 0}
+        {0, 0, 8, 0, 0},
+        {0, 0, 0, 0, 2},
+        {0, 0, 4, 0, 0},
+        {3, 0, 0, 0, 0},
+        {0, 0, 2, 0, 0}
     };
-    print_2d_vector(arr);
-    std::cout << sum_of_squares_of_connected_unshaded_areas(arr) << std::endl;
-    solve(arr);
+        print_2d_vector(arr);
+        solve(arr);
     return 0;
 }
